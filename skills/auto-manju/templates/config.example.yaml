@@ -1,0 +1,72 @@
+project:
+  name: auto_manju
+  language: zh-CN
+  style: "国漫热血+爽感强节奏"
+
+thresholds:
+  character_consistency: 0.82
+  plot_consistency: 0.85
+  av_quality: 0.80
+
+runtime:
+  fps: 24
+  resolution: "1080x1920"
+  max_regen_rounds: 3
+  max_parallel_jobs: 4
+
+safety:
+  enable_content_moderation: true
+  block_on_policy_violation: true
+
+platforms:
+  openai_text:
+    capabilities: [story_insight, character_bible, script_generation, qc]
+    model: gpt-5.3-codex
+    quality_score: 0.93
+    latency_score: 0.80
+    cost_score: 0.62
+    api_base_env: OPENAI_BASE_URL
+    api_key_env: OPENAI_API_KEY
+    input_contract: json
+    output_contract: json
+  runway_video:
+    capabilities: [storyboard_generation, video_generation]
+    model: gen4_turbo
+    quality_score: 0.90
+    latency_score: 0.75
+    cost_score: 0.55
+    api_base_env: RUNWAY_API_BASE
+    api_key_env: RUNWAY_API_KEY
+    input_contract: image_plus_motion_prompt
+    output_contract: mp4
+  kling_video:
+    capabilities: [video_generation]
+    model: kling_2
+    quality_score: 0.91
+    latency_score: 0.70
+    cost_score: 0.50
+    api_base_env: KLING_API_BASE
+    api_key_env: KLING_API_KEY
+    input_contract: text_or_image_prompt
+    output_contract: mp4
+  elevenlabs_tts:
+    capabilities: [tts_generation]
+    model: multilingual_v2
+    quality_score: 0.92
+    latency_score: 0.82
+    cost_score: 0.60
+    api_base_env: ELEVENLABS_API_BASE
+    api_key_env: ELEVENLABS_API_KEY
+    input_contract: text_plus_voice_id
+    output_contract: wav
+
+stage_plan:
+  story_insight: { capability: story_insight, mode: quality_first, allow: [openai_text] }
+  character_bible: { capability: character_bible, mode: quality_first, allow: [openai_text] }
+  script_generation: { capability: script_generation, mode: quality_first, allow: [openai_text] }
+  storyboard_generation: { capability: storyboard_generation, mode: quality_first, allow: [runway_video] }
+  video_generation: { capability: video_generation, mode: quality_first, allow: [kling_video, runway_video] }
+  tts_generation: { capability: tts_generation, mode: quality_first, allow: [elevenlabs_tts] }
+  music_generation: { capability: music_generation, mode: balanced, allow: [] }
+  editing: { capability: editing, mode: speed_first, allow: [] }
+  qc: { capability: qc, mode: quality_first, allow: [openai_text] }
